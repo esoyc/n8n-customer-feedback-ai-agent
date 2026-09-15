@@ -1,6 +1,6 @@
-# 🤖 Müşteri Geri Bildirim AI Agent (n8n & Gemini 3.5)
+# 🤖 Customer Feedback AI Agent - (n8n)
 
-Bu proje; Google Sheets tablosuna yeni eklenen e-ticaret müşteri yorumlarını gerçek zamanlı (real-time) algılayan, Google Gemini LLM ve Structured Output Parser kullanarak yorumları analiz eden ve sonuçları otomatik güncelleyen bir otomasyon sistemidir.
+Bu proje; Google Sheets tablosuna yeni eklenen müşteri yorumlarını gerçek zamanlı algılayan, Google Gemini LLM kullanarak yorumları analiz eden ve sonuçları otomatik güncelleyen bir otomasyon sistemidir.
 
 ## 🚀 Öne Çıkan Özellikler
 
