@@ -1,0 +1,344 @@
+{
+  "name": "customer_feedback_assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": []
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1DCxp1ssaVlI52tZBx9a2QgG2gbBEGiXt1s7CiT4Lrxg/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "musteri_feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DCxp1ssaVlI52tZBx9a2QgG2gbBEGiXt1s7CiT4Lrxg/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -176
+      ],
+      "id": "01d1cfb4-9913-4ca5-8f4b-9db6792528a7",
+      "name": "Google Sheets Trigger",
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "tPfB9UgtoDFUkBR1",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.musteri_yorum }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Sen e-ticaret müşteri geri bildirimlerini analiz eden bir AI asistanısın.\nGörevin, sana sunulan müşteri yorumunu okuyup doğru kategorilere ayırmaktır.\n\nKURALLAR:\n1. yorum_turu:\n   - Ürün kırık/hasarlı/ayıplı, kargo gecikmiş, şikayet varsa -> \"negatif\"\n   - Memnuniyet, övgü, beğeni varsa -> \"pozitif\"\n   - Sadece soru veya nötr bilgi varsa -> \"notr\"\n\n2. kategori:\n   - Kırık, bozuk, kalitesiz ürün -> \"urun_kalitesi\"\n   - Kargo, teslimat, ambalaj hasarı -> \"kargo_sevkiyat\"\n   - İade, değişim talebi -> \"iade_islemleri\"\n   - Stok tükenmesi, ürün varlığı -> \"stok\"\n\n3. aciliyet:\n   - Kırık ürün, para iade talebi, ağır şikayet -> \"yuksek\"\n   - Kargo gecikmesi, stok sorma -> \"orta\"\n   - Övgü, memnuniyet -> \"dusuk\"\n\n4. sorumlu_ekip:\n   - Kırık/bozuk ürün, iade -> \"musteri_hizmetleri\"\n   - Teslimat ve kargo sorunları -> \"lojistik\"\n   - Stok ve indirim talepleri -> \"pazarlama\"\n\nÖNEMLİ: Müşteri yorumunu kelime kelime oku ve bu kurallara harfiyen uy.\n\nKESİN DEĞERLENDİRME KURALLARI:\n1. \"kırık\", \"bozuk\", \"hasarlı\", \"eksi\", \"şikayet\" kelimelerini içeren yorumların yorum_turu KESİNLİKLE \"negatif\" olmalıdır. ASLA \"notr\" yapma.\n2. Ürünün kırık/hasarlı gelmesi durumunda aciliyet KESİNLİKLE \"yuksek\" olmalıdır. ASLA \"dusuk\" yapma.\n\nAşağıdaki örnek analizleri birebir referans al:\n\nÖrnek 1:\nMüşteri Yorumu: \"ürünüm kırık geldi\"\nÇıktı: yorum_turu: \"negatif\", kategori: \"urun_kalitesi\", aciliyet: \"yuksek\", sorumlu_ekip: \"musteri_hizmetleri\"\n\nÖrnek 2:\nMüşteri Yorumu: \"başarılı tavsiye ederim\"\nÇıktı: yorum_turu: \"pozitif\", kategori: \"urun_kalitesi\", aciliyet: \"dusuk\", sorumlu_ekip: \"musteri_hizmetleri\"\n\nÖrnek 3:\nMüşteri Yorumu: \"stok ne zaman gelir\"\nÇıktı: yorum_turu: \"notr\", kategori: \"stok\", aciliyet: \"orta\", sorumlu_ekip: \"pazarlama\"\n\nGelen müşteri yorumunu yukarıdaki örneklerdeki gibi analiz et."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -256,
+        -176
+      ],
+      "id": "f95ef8f7-fd7c-4638-8ea2-716a56703f7e",
+      "name": "AI Agent",
+      "retryOnFail": false,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        32
+      ],
+      "id": "b0a99d95-6f84-425e-8773-db565d5d1b63",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4LwmfSTejJTSnTVh",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1DCxp1ssaVlI52tZBx9a2QgG2gbBEGiXt1s7CiT4Lrxg",
+          "mode": "list",
+          "cachedResultName": "customer_feedbacks",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DCxp1ssaVlI52tZBx9a2QgG2gbBEGiXt1s7CiT4Lrxg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "musteri_feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DCxp1ssaVlI52tZBx9a2QgG2gbBEGiXt1s7CiT4Lrxg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "siparis_no": "={{ $('Google Sheets Trigger').item.json.siparis_no }}",
+            "yorum_turu": "={{ $('AI Agent').item.json.output.yorum_turu }}",
+            "kategori": "={{ $('AI Agent').item.json.output.kategori }}",
+            "aciliyet": "={{ $('AI Agent').item.json.output.aciliyet }}",
+            "sorumlu_ekip": "={{ $('AI Agent').item.json.output.sorumlu_ekip }}"
+          },
+          "matchingColumns": [
+            "siparis_no"
+          ],
+          "schema": [
+            {
+              "id": "musteri_no",
+              "displayName": "musteri_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "siparis_no",
+              "displayName": "siparis_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "musteri_yorum",
+              "displayName": "musteri_yorum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "yorum_tarihi",
+              "displayName": "yorum_tarihi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "yorum_turu",
+              "displayName": "yorum_turu",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "kategori",
+              "displayName": "kategori",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "aciliyet",
+              "displayName": "aciliyet",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sorumlu_ekip",
+              "displayName": "sorumlu_ekip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        -176
+      ],
+      "id": "e93afaae-d38a-4a5b-a071-3b1c96baa464",
+      "name": "Update row in sheet",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XK5ZAzOjdHLyikMA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"yorum_turu\": {\n      \"type\": \"string\",\n      \"enum\": [\"pozitif\", \"negatif\", \"notr\"]\n    },\n    \"kategori\": {\n      \"type\": \"string\",\n      \"enum\": [\"urun_kalitesi\", \"kargo_sevkiyat\", \"iade_islemleri\", \"stok\", \"diger\"]\n    },\n    \"aciliyet\": {\n      \"type\": \"string\",\n      \"enum\": [\"yuksek\", \"orta\", \"dusuk\"]\n    },\n    \"sorumlu_ekip\": {\n      \"type\": \"string\",\n      \"enum\": [\"musteri_hizmetleri\", \"lojistik\", \"pazarlama\", \"IT\", \"diger\"]\n    }\n  },\n  \"required\": [\"yorum_turu\", \"kategori\", \"aciliyet\", \"sorumlu_ekip\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        32
+      ],
+      "id": "68f509c7-14f1-4eae-adef-e7598999ce9c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "500f0b90-e8d4-4477-87c5-072c6537e981",
+              "leftValue": "={{ $json.yorum_turu }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -496,
+        -176
+      ],
+      "id": "7fed6431-a8ff-4fef-acd2-e42d9a175eed",
+      "name": "Filter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c87c659e-47bc-42ca-9234-90016eb6edad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a49beee87bf82e76c26d5b187bb804e5f172f325e97ec4a612722f969bdf2657"
+  },
+  "nodeGroups": [],
+  "id": "Z6VHDTzaH8DLmhgb",
+  "tags": []
+}
